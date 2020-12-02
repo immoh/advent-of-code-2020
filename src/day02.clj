@@ -17,3 +17,12 @@
 
 (defn part1 [input]
   (count (filter valid1? (parse-input input))))
+
+(defn xor [b1 b2]
+  (and (or b1 b2) (not (and b1 b2))))
+
+(defn valid2? [{:keys [x y letter password]}]
+  (xor (= (.charAt password (dec x)) letter) (= (.charAt password (dec y)) letter)))
+
+(defn part2 [input]
+  (count (filter valid2? (parse-input input))))
