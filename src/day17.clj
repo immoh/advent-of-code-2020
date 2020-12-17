@@ -10,7 +10,7 @@
                                               row))
                               (clojure.string/split-lines input))))
 
-(defn deltas [dimension]
+(defn deltas* [dimension]
   (loop [n dimension
          deltas [[]]]
     (if (pos? n)
@@ -19,8 +19,12 @@
                        (conj delta d)))
       (remove (partial every? zero?) deltas))))
 
-(defn neighbors [pos]
+(def deltas (memoize deltas*))
+
+(defn neighbors* [pos]
   (map #(mapv + pos %) (deltas (count pos))))
+
+(def neighbors (memoize neighbors*))
 
 (defn is-active-in-next-round? [actives pos]
   (let [active-neighbor-count (count (filter actives (neighbors pos)))]
