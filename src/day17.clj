@@ -33,7 +33,7 @@
 
 (defn round [actives]
   (set (filter (partial is-active-in-next-round? actives)
-               (concat actives (mapcat neighbors actives)))))
+               (set (concat actives (mapcat neighbors actives))))))
 
 (defn to-dimension [n positions]
   (map (fn [pos] (into pos (repeat (- n (count pos)) 0))) positions))
