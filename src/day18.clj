@@ -44,19 +44,13 @@
 (defn part1 [input]
   (reduce + (map evaluate (parse-input input))))
 
-(defn evaluate2 [expr]
-  (cond
-    (some sequential? expr)
-    (evaluate2 (map #(if (sequential? %)
-                       (evaluate2 %)
-                       %)
-                    expr))
-
-    (some #{\*} expr)
+(defn change-parse-tree [expr]
+  (if (sequential? expr)
     (let [[arg1 arg2] (split-with (complement #{\*}) expr)]
-      (* (evaluate2 arg1) (evaluate2 (rest arg2))))
-    :else
-    (evaluate expr)))
+      (if (seq arg2)
+        [(change-parse-tree arg1) \* (change-parse-tree (rest arg2))]
+        (map change-parse-tree arg1)))
+    expr))
 
 (defn part2 [input]
-  (reduce + (map evaluate2 (parse-input input))))
+  (reduce + (map (comp evaluate change-parse-tree) (parse-input input))))
