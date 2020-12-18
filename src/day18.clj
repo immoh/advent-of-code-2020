@@ -2,31 +2,31 @@
   (:require
     clojure.string))
 
+(declare parse-expr)
+
+(defn parse-next-group [s]
+  (loop [group []
+         s (rest s)
+         level 1]
+    (if (zero? level)
+      [(parse-expr (butlast group)) s]
+      (let [c (first s)]
+        (recur (conj group c) (rest s) (+ level (get {\( 1 \) -1} c 0)))))))
+
+(defn parse-next [s]
+  (when-let [c (first s)]
+    (case (first s)
+      \space (recur (drop-while #{\space} s))
+      \( (parse-next-group s)
+      (\+ \*) [c (rest s)]
+      (let [[n remaining] (split-with (complement #{\space}) s)]
+        [(Long/parseLong (apply str n)) remaining]))))
+
 (defn parse-expression [s]
-  (loop [s s
-         expr []
-         res []
-         state :whitespace
-         level 0]
-    (if-let [c (first s)]
-      (case state
-        :whitespace  (case c
-                       \( (recur (rest s) expr res :parenthesis (inc level))
-                       \space (recur (rest s) expr res state level)
-                       (\+ \*) (recur (rest s) expr (conj res c) state level)
-                       (recur (rest s) (conj expr c) res :number level))
-        :parenthesis (case c
-                       \( (recur (rest s) (conj expr c) res state (inc level))
-                       \) (if (= level 1)
-                            (recur (rest s) [] (conj res (parse-expression (apply str expr))) :whitespace 0)
-                            (recur (rest s) (conj expr c) res state (dec level)))
-                       (recur (rest s) (conj expr c) res state level))
-        (if (= c \space)
-          (recur (rest s) [] (conj res (Long/parseLong (apply str expr))) :whitespace level)
-          (recur (rest s) (conj expr c) res :number level)))
-      (if (seq expr)
-        (conj res (Long/parseLong (apply str expr)))
-        res))))
+  (->> (iterate (comp parse-next second) [nil s])
+       (rest)
+       (take-while identity)
+       (map first)))
 
 (defn evaluate [expr]
   (loop [expr expr
