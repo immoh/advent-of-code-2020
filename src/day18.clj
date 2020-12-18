@@ -29,21 +29,14 @@
        (map first)))
 
 (defn evaluate [expr]
-  (loop [expr expr
-         acc 0
-         op +]
-    (let [arg (first expr)]
-      (if arg
-        (cond
-          (sequential? arg)
-          (recur (rest expr) (op acc (evaluate arg)) op)
-
-          (#{\+ \*} arg)
-          (recur (rest expr) acc (get {\+ + \* *} arg))
-
-          :else
-          (recur (rest expr) (op acc arg) op))
-        acc))))
+  (if (sequential? expr)
+    (:n (reduce (fn [acc arg]
+                  (if-let [op (get {\+ + \* *} arg)]
+                    (assoc acc :op op)
+                    (update acc :n (:op acc) (evaluate arg))))
+                {:n 0 :op +}
+                expr))
+    expr))
 
 (defn parse-input [input]
   (map parse-expression (clojure.string/split-lines input)))
